@@ -1,3 +1,1 @@
-abstract class LedRepository {
-
-}
+abstract class LedRepository {}

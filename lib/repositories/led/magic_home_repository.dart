@@ -1,5 +1,3 @@
 import 'led_repository.dart';
 
-class MagicHomeRepository implements LedRepository {
-
-}
+class MagicHomeRepository implements LedRepository {}
