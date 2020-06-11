@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'res/routes.dart';
 import 'routes/home_route.dart';
 
-/// Initial route
 class BanjoHouseApp extends StatelessWidget {
+  const BanjoHouseApp({Key key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,7 +16,7 @@ class BanjoHouseApp extends StatelessWidget {
       ),
       initialRoute: Routes.home,
       routes: {
-        Routes.home: (_) => HomeRoute(),
+        Routes.home: (_) => const HomeRoute(),
       },
     );
   }

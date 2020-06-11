@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Initial route
 class HomeRoute extends StatelessWidget {
+  const HomeRoute({Key key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Banjo House'),
+        title: const Text('Banjo House'),
       ),
       body: Container(),
     );
