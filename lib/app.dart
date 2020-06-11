@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'res/routes.dart';
 import 'routes/home_route.dart';
 
-/// Root of Widget tree
+/// Initial route
 class BanjoHouseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

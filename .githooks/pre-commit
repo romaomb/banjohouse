@@ -2,8 +2,8 @@
 
 dartfmt -w .
 
-flutter analyze
+dartanalyzer --fatal-infos --fatal-warnings .
 if [ $? -ne 0 ]; then
-    echo "Flutter Analyze failed"
+    echo "Static analysis failed"
     exit 1
 fi
