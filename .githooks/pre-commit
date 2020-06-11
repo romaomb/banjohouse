@@ -3,6 +3,6 @@
 flutter analyze
 
 if [ $? -ne 0 ]; then
-    echo "Analyze failed"
+    echo "Flutter Analyze failed"
     exit 1
 fi
