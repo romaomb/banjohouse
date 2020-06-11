@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'res/routes.dart';
+import 'resources/routes.dart';
 import 'routes/home_route.dart';
 
 class BanjoHouseApp extends StatelessWidget {
