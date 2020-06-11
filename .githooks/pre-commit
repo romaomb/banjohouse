@@ -1,0 +1,9 @@
+#!/bin/bash
+
+dartfmt -w .
+
+dartanalyzer --fatal-infos --fatal-warnings .
+if [ $? -ne 0 ]; then
+    echo "Static analysis failed"
+    exit 1
+fi
