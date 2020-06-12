@@ -1,81 +1,61 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import '../models/magic_home.dart';
-
 class MagicHomeService {
-  static const discoveryPort = 48899;
-  static const discoveryMessage = 'HF-A11ASSISTHREAD';
-  static const discoveryCodec = AsciiCodec();
-  static const devicePort = 5577;
+  static const _discoveryPort = 48899;
+  static const _discoveryMessage = 'HF-A11ASSISTHREAD';
+  static const _asciiCodec = AsciiCodec();
+  static const _devicePort = 5577;
+  static const _bitwise = 0xFF;
 
-  /// TODO: get connected network address
-  final destinationNetwork = InternetAddress('192.168.0.255');
-  final devices = <MagicHome>[];
+  Socket _tcpSocket;
 
-  Socket deviceSocket;
+  Future<String> find(InternetAddress broadcastAddress) async {
+    final udpSocket =
+        await RawDatagramSocket.bind(InternetAddress.anyIPv4, _discoveryPort)
+          ..broadcastEnabled = true;
 
-  Future<void> scan() async {
-    if (devices.isNotEmpty) return;
+    Timer(const Duration(seconds: 2), udpSocket.close);
 
-    final socket =
-        await RawDatagramSocket.bind(InternetAddress.anyIPv4, discoveryPort);
+    final message = _asciiCodec.encode(_discoveryMessage);
+    udpSocket.send(message, broadcastAddress, _discoveryPort);
 
-    socket.broadcastEnabled = true;
-
-    final socketSubscription = socket.listen((event) {
-      final datagram = socket.receive();
-
-      if (datagram != null) {
-        final data = discoveryCodec.decode(datagram.data);
-
-        if (data != null && data != discoveryMessage) {
-          final rawMagicHome = data.split(',');
-          devices.add(MagicHome(
-              internetAddress: InternetAddress(rawMagicHome[0]),
-              id: rawMagicHome[1],
-              model: rawMagicHome[2]));
-        }
-      }
+    String data;
+    await udpSocket.firstWhere((_) {
+      final datagram = udpSocket.receive();
+      data = _asciiCodec.decode(datagram.data);
+      return datagram != null && data != null && data != _discoveryMessage;
     });
 
-    final message = discoveryCodec.encode(discoveryMessage);
-    socket.send(message, destinationNetwork, discoveryPort);
-
-    await Future<void>.delayed(const Duration(seconds: 3));
-    socketSubscription.cancel();
-
-    for (var device in devices) {
-      print(device.toString());
-    }
+    udpSocket.close();
+    return data;
   }
 
-  Future<void> send() async {
-    if (devices.isEmpty) return;
-
-    print('Forming message');
-    final tempMessage = [
-      0x31,
-      0xFF,
-      0x00,
-      0x00,
-      0x00,
-      0x00,
-      0x0F,
-    ];
-
+  Future<void> send(List<int> message, InternetAddress address) async {
+    await _connect(address);
     final checkSum =
-        tempMessage.reduce((value, element) => value + element) & 0xFF;
-
-    if (deviceSocket == null) {
-      deviceSocket =
-          await Socket.connect(devices[0].internetAddress, devicePort);
-    }
-
-    deviceSocket.add(Uint8List.fromList([
-      ...tempMessage,
+        message.reduce((value, element) => value + element) & _bitwise;
+    _tcpSocket.add(Uint8List.fromList([
+      ...message,
       checkSum,
     ]));
+  }
+
+  Future<void> _connect(InternetAddress address) async {
+    if (_tcpSocket != null) {
+      if (_tcpSocket.address.address != address.address) {
+        await _tcpSocket.close();
+      } else {
+        return;
+      }
+    }
+
+    _tcpSocket = await Socket.connect(address, _devicePort);
+  }
+
+  void dispose() {
+    _tcpSocket?.close();
   }
 }
