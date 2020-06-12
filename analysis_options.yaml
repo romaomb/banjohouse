@@ -8,5 +8,6 @@ analyzer:
 linter:
   rules:
     public_member_api_docs: false
+    type_annotate_public_apis: false
     prefer_const_constructors: true
     prefer_const_literals_to_create_immutables: true
