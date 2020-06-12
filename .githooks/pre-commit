@@ -2,7 +2,7 @@
 
 dartfmt -w .
 
-dartanalyzer --fatal-infos --fatal-warnings .
+dart analyze --fatal-infos --fatal-warnings .
 if [ $? -ne 0 ]; then
     echo "Static analysis failed"
     exit 1
