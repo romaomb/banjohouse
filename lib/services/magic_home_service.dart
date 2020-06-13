@@ -20,28 +20,15 @@ class MagicHomeService {
   StreamSink get _datagramSink => _datagram.sink;
   Stream<String> get datagram => _datagram.stream.asBroadcastStream();
 
-  Future<void> startSearch(InternetAddress broadcastAddress) async {
+  void startSearch(InternetAddress broadcastAddress) async {
     if (_udpSocket == null) await _bindUdpSocket();
 
     _udpSubscription?.cancel();
     _udpSubscription =
         await _udpStream.listen((event) => _onRawDatagramReceived());
 
-    print('Sending message');
     final message = _asciiCodec.encode(_messageDiscovery);
     _udpSocket.send(message, broadcastAddress, _discoveryPort);
-  }
-
-  void _onRawDatagramReceived() {
-    final datagram = _udpSocket.receive();
-    print('Received message');
-    if (datagram != null) {
-      final decodedDatagram = _asciiCodec.decode(datagram.data);
-      print('Datagram: $decodedDatagram');
-      if (decodedDatagram != null && decodedDatagram != _messageDiscovery) {
-        _datagramSink.add(decodedDatagram);
-      }
-    }
   }
 
   void _bindUdpSocket() async {
@@ -52,6 +39,16 @@ class MagicHomeService {
     _udpSocket.broadcastEnabled = true;
   }
 
+  void _onRawDatagramReceived() {
+    final datagram = _udpSocket.receive();
+    if (datagram != null) {
+      final decodedDatagram = _asciiCodec.decode(datagram.data);
+      if (decodedDatagram != null && decodedDatagram != _messageDiscovery) {
+        _datagramSink.add(decodedDatagram);
+      }
+    }
+  }
+
   void stopSearch() => _udpSubscription.cancel();
 
   Future<bool> connectWith(InternetAddress address) async {
@@ -60,7 +57,7 @@ class MagicHomeService {
     return true;
   }
 
-  void send(List<int> message, InternetAddress address) async {
+  void send(List<int> message, InternetAddress address) {
     final sum = message.reduce((value, element) => value + element);
     final checkSum = sum & _bitwise;
 

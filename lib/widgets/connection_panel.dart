@@ -97,7 +97,7 @@ class ConnectionPanel extends StatelessWidget {
               RaisedButton(
                 child: const Text(Localization.setRandom),
                 onPressed: store.connectedDevice != null
-                    ? () => store.setRandomColor
+                    ? () => store.setRandomColor()
                     : null,
               ),
             ],

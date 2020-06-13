@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/localization.dart';
@@ -12,10 +13,12 @@ class ColorPicker extends StatelessWidget {
     final store = Provider.of<MagicHomeStore>(context);
     return Column(
       children: [
-        Text(
-          '${Localization.currentColor}: '
-          '${store.currentColor?.toString() ?? ''}',
-        ),
+        Observer(builder: (_) {
+          return Text(
+            '${Localization.currentColor}: '
+            '${store.currentColor?.toString() ?? ''}',
+          );
+        }),
       ],
     );
   }

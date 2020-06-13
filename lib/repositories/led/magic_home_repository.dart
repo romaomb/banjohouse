@@ -22,9 +22,7 @@ class MagicHomeRepository implements LedRepository {
 
   StreamSubscription _datagramSubscription;
 
-  Future<void> searchForDevices(InternetAddress broadcastAddress) async {
-    print('Start search - repo');
-
+  void searchForDevices(InternetAddress broadcastAddress) async {
     _datagramSubscription?.cancel();
     _datagramSubscription =
         magicHomeService.datagram.listen(_onDatagramReceived);
@@ -33,7 +31,6 @@ class MagicHomeRepository implements LedRepository {
   }
 
   void _onDatagramReceived(String datagram) {
-    print('Raw magicHome');
     final rawMagicHome = datagram.split(',');
     _magicHomeSink.add(MagicHome(
       internetAddress: InternetAddress(rawMagicHome[0]),
@@ -47,7 +44,7 @@ class MagicHomeRepository implements LedRepository {
   Future<bool> connectTo(MagicHome device) async =>
       magicHomeService.connectWith(device.internetAddress);
 
-  void setColor(MagicHome device, LedColor color) async {
+  void setColor(MagicHome device, LedColor color) {
     final message = [
       color.persist ? 0x31 : 0x41,
       color.red,
@@ -58,7 +55,7 @@ class MagicHomeRepository implements LedRepository {
       0x0F,
     ];
 
-    await magicHomeService.send(message, device.internetAddress);
+    magicHomeService.send(message, device.internetAddress);
   }
 
   void togglePower(MagicHome device, {bool turnOn = true}) {

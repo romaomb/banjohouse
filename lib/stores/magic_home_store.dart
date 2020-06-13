@@ -41,8 +41,6 @@ abstract class _MagicHomeStore with Store {
   StreamSubscription _deviceSubscription;
 
   void scan() async {
-    print('Scanning');
-
     _deviceSubscription?.cancel();
     _deviceSubscription = magicHomeRepository.magicHome.listen(_onDeviceFound);
 
@@ -52,7 +50,6 @@ abstract class _MagicHomeStore with Store {
   @action
   void _onDeviceFound(MagicHome device) {
     if (!devicesFound.contains(device)) {
-      print('New device found ${device.toString()}');
       devicesFound.add(device);
     }
   }
@@ -62,24 +59,23 @@ abstract class _MagicHomeStore with Store {
     await magicHomeRepository.stopSearch();
     final didConnect = await magicHomeRepository.connectTo(device);
     if (didConnect) {
-      print('Connected to ${device.toString()}');
       connectedDevice = device;
     }
   }
 
-  Future<void> setRandomColor() => setColor(
+  void setRandomColor() => setRgbColor(
         _random.nextInt(255),
         _random.nextInt(255),
         _random.nextInt(255),
       );
 
-  Future<void> setColor(int red, int green, int blue) async {
+  @action
+  void setRgbColor(int red, int green, int blue) {
     if (connectedDevice == null) return;
 
-    print('Setting new color ($red, $green, $blue)');
     currentColor = LedColor(red, green, blue);
 
-    await magicHomeRepository.setColor(
+    magicHomeRepository.setColor(
       connectedDevice,
       currentColor,
     );
