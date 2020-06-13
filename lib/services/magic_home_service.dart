@@ -4,51 +4,63 @@ import 'dart:io';
 import 'dart:typed_data';
 
 class MagicHomeService {
-  static const _discoveryPort = 48899;
-  static const _discoveryMessage = 'HF-A11ASSISTHREAD';
   static const _asciiCodec = AsciiCodec();
+  static const _messageDiscovery = 'HF-A11ASSISTHREAD';
+  static const _discoveryPort = 48899;
   static const _devicePort = 5577;
   static const _bitwise = 0xFF;
 
   Socket _tcpSocket;
 
-  Future<String> find(InternetAddress broadcastAddress) async {
-    final udpSocket =
-        await RawDatagramSocket.bind(InternetAddress.anyIPv4, _discoveryPort)
-          ..broadcastEnabled = true;
+  RawDatagramSocket _udpSocket;
+  Stream<RawSocketEvent> get _udpStream => _udpSocket.asBroadcastStream();
+  StreamSubscription _udpSubscription;
 
-    Timer(const Duration(seconds: 2), udpSocket.close);
+  final _datagram = StreamController<String>();
+  StreamSink get _datagramSink => _datagram.sink;
+  Stream<String> get datagram => _datagram.stream.asBroadcastStream();
 
-    final message = _asciiCodec.encode(_discoveryMessage);
-    udpSocket.send(message, broadcastAddress, _discoveryPort);
+  void startSearch(InternetAddress broadcastAddress) async {
+    if (_udpSocket == null) await _bindUdpSocket();
 
-    String data;
-    await udpSocket.firstWhere((_) {
-      final datagram = udpSocket.receive();
-      data = _asciiCodec.decode(datagram?.data);
-      return datagram != null && data != null && data != _discoveryMessage;
-    });
+    _udpSubscription?.cancel();
+    _udpSubscription =
+        await _udpStream.listen((event) => _onRawDatagramReceived());
 
-    udpSocket.close();
-    return data;
+    final message = _asciiCodec.encode(_messageDiscovery);
+    _udpSocket.send(message, broadcastAddress, _discoveryPort);
   }
 
-  Future<bool> connect(InternetAddress address) async {
-    if (_tcpSocket != null) {
-      if (_tcpSocket.address.address != address.address) {
-        await _tcpSocket.close();
-      } else {
-        return true;
+  void _bindUdpSocket() async {
+    _udpSocket = await RawDatagramSocket.bind(
+      InternetAddress.anyIPv4,
+      _discoveryPort,
+    );
+    _udpSocket.broadcastEnabled = true;
+  }
+
+  void _onRawDatagramReceived() {
+    final datagram = _udpSocket.receive();
+    if (datagram != null) {
+      final decodedDatagram = _asciiCodec.decode(datagram.data);
+      if (decodedDatagram != null && decodedDatagram != _messageDiscovery) {
+        _datagramSink.add(decodedDatagram);
       }
     }
+  }
 
+  void stopSearch() => _udpSubscription.cancel();
+
+  Future<bool> connectWith(InternetAddress address) async {
+    if (_tcpSocket != null) return false;
     _tcpSocket = await Socket.connect(address, _devicePort);
     return true;
   }
 
-  Future<void> send(List<int> message, InternetAddress address) async {
-    final checkSum =
-        message.reduce((value, element) => value + element) & _bitwise;
+  void send(List<int> message, InternetAddress address) {
+    final sum = message.reduce((value, element) => value + element);
+    final checkSum = sum & _bitwise;
+
     _tcpSocket.add(Uint8List.fromList([
       ...message,
       checkSum,
@@ -56,6 +68,8 @@ class MagicHomeService {
   }
 
   void dispose() {
+    _udpSubscription?.cancel();
     _tcpSocket?.close();
+    _udpSocket?.close();
   }
 }

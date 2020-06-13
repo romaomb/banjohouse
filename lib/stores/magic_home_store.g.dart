@@ -39,11 +39,34 @@ mixin _$MagicHomeStore on _MagicHomeStore, Store {
     });
   }
 
-  final _$scanAsyncAction = AsyncAction('_MagicHomeStore.scan');
+  final _$isOnAtom = Atom(name: '_MagicHomeStore.isOn');
 
   @override
-  Future<void> scan() {
-    return _$scanAsyncAction.run(() => super.scan());
+  bool get isOn {
+    _$isOnAtom.reportRead();
+    return super.isOn;
+  }
+
+  @override
+  set isOn(bool value) {
+    _$isOnAtom.reportWrite(value, super.isOn, () {
+      super.isOn = value;
+    });
+  }
+
+  final _$currentColorAtom = Atom(name: '_MagicHomeStore.currentColor');
+
+  @override
+  LedColor get currentColor {
+    _$currentColorAtom.reportRead();
+    return super.currentColor;
+  }
+
+  @override
+  set currentColor(LedColor value) {
+    _$currentColorAtom.reportWrite(value, super.currentColor, () {
+      super.currentColor = value;
+    });
   }
 
   final _$connectToAsyncAction = AsyncAction('_MagicHomeStore.connectTo');
@@ -53,11 +76,27 @@ mixin _$MagicHomeStore on _MagicHomeStore, Store {
     return _$connectToAsyncAction.run(() => super.connectTo(device));
   }
 
+  final _$_MagicHomeStoreActionController =
+      ActionController(name: '_MagicHomeStore');
+
+  @override
+  void _onDeviceFound(MagicHome device) {
+    final _$actionInfo = _$_MagicHomeStoreActionController.startAction(
+        name: '_MagicHomeStore._onDeviceFound');
+    try {
+      return super._onDeviceFound(device);
+    } finally {
+      _$_MagicHomeStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
   @override
   String toString() {
     return '''
 connectedDevice: ${connectedDevice},
-devicesFound: ${devicesFound}
+devicesFound: ${devicesFound},
+isOn: ${isOn},
+currentColor: ${currentColor}
     ''';
   }
 }
