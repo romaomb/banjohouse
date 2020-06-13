@@ -22,18 +22,24 @@ class MagicHomeRepository implements LedRepository {
 
   StreamSubscription _datagramSubscription;
 
-  void searchForDevices(InternetAddress broadcastAddress) async {
+  Future<void> searchForDevices(InternetAddress broadcastAddress) async {
+    print('Start search - repo');
+
     _datagramSubscription?.cancel();
-    _datagramSubscription = magicHomeService.datagram.listen((datagram) {
-      final rawMagicHome = datagram.split(',');
-      _magicHomeSink.add(MagicHome(
-        internetAddress: InternetAddress(rawMagicHome[0]),
-        rawMac: rawMagicHome[1],
-        model: rawMagicHome[2],
-      ));
-    });
+    _datagramSubscription =
+        magicHomeService.datagram.listen(_onDatagramReceived);
 
     await magicHomeService.startSearch(broadcastAddress);
+  }
+
+  void _onDatagramReceived(String datagram) {
+    print('Raw magicHome');
+    final rawMagicHome = datagram.split(',');
+    _magicHomeSink.add(MagicHome(
+      internetAddress: InternetAddress(rawMagicHome[0]),
+      rawMac: rawMagicHome[1],
+      model: rawMagicHome[2],
+    ));
   }
 
   void stopSearch() => _datagramSubscription.cancel();

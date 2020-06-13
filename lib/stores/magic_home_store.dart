@@ -40,19 +40,21 @@ abstract class _MagicHomeStore with Store {
 
   StreamSubscription _deviceSubscription;
 
-  @action
-  Future<void> scan() async {
+  void scan() async {
     print('Scanning');
 
     _deviceSubscription?.cancel();
-    _deviceSubscription = magicHomeRepository.magicHome.listen((device) {
-      if (!devicesFound.contains(device)) {
-        print('New device found ${device.toString()}');
-        devicesFound.add(device);
-      }
-    });
+    _deviceSubscription = magicHomeRepository.magicHome.listen(_onDeviceFound);
 
     await magicHomeRepository.searchForDevices(_broadcast);
+  }
+
+  @action
+  void _onDeviceFound(MagicHome device) {
+    if (!devicesFound.contains(device)) {
+      print('New device found ${device.toString()}');
+      devicesFound.add(device);
+    }
   }
 
   @action

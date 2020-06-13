@@ -50,7 +50,8 @@ class _SearchRouteState extends State<SearchRoute> {
                       leading: Image.asset(Images.magicHome, height: 55.0),
                       subtitle: Text(device.internetAddress.address),
                     );
-                  }),
+                  },
+                ),
         ),
       ),
     );

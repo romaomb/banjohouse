@@ -69,18 +69,25 @@ mixin _$MagicHomeStore on _MagicHomeStore, Store {
     });
   }
 
-  final _$scanAsyncAction = AsyncAction('_MagicHomeStore.scan');
-
-  @override
-  Future<void> scan() {
-    return _$scanAsyncAction.run(() => super.scan());
-  }
-
   final _$connectToAsyncAction = AsyncAction('_MagicHomeStore.connectTo');
 
   @override
   Future<void> connectTo(MagicHome device) {
     return _$connectToAsyncAction.run(() => super.connectTo(device));
+  }
+
+  final _$_MagicHomeStoreActionController =
+      ActionController(name: '_MagicHomeStore');
+
+  @override
+  void _onDeviceFound(MagicHome device) {
+    final _$actionInfo = _$_MagicHomeStoreActionController.startAction(
+        name: '_MagicHomeStore._onDeviceFound');
+    try {
+      return super._onDeviceFound(device);
+    } finally {
+      _$_MagicHomeStoreActionController.endAction(_$actionInfo);
+    }
   }
 
   @override
