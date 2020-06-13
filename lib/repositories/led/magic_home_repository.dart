@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import '../../models/led_color.dart';
@@ -8,30 +9,39 @@ import '../../services/magic_home_service.dart';
 import 'led_repository.dart';
 
 class MagicHomeRepository implements LedRepository {
-  const MagicHomeRepository(this.magicHomeService);
-
   final MagicHomeService magicHomeService;
 
-  Future<MagicHome> searchDevice(InternetAddress broadcastAddress) async {
-    final data = await magicHomeService.find(broadcastAddress);
+  MagicHomeRepository(this.magicHomeService);
 
-    if (data != null) {
-      final rawMagicHome = data.split(',');
-      print('RawData: $rawMagicHome');
-      return MagicHome(
+  static const _messageOn = [0x71, 0x23, 0x0f];
+  static const _messageOff = [0x71, 0x24, 0x0f];
+
+  final _magicHome = StreamController<MagicHome>();
+  StreamSink get _magicHomeSink => _magicHome.sink;
+  Stream<MagicHome> get magicHome => _magicHome.stream.asBroadcastStream();
+
+  StreamSubscription _datagramSubscription;
+
+  void searchForDevices(InternetAddress broadcastAddress) async {
+    _datagramSubscription?.cancel();
+    _datagramSubscription = magicHomeService.datagram.listen((datagram) {
+      final rawMagicHome = datagram.split(',');
+      _magicHomeSink.add(MagicHome(
         internetAddress: InternetAddress(rawMagicHome[0]),
-        mac: rawMagicHome[1],
+        rawMac: rawMagicHome[1],
         model: rawMagicHome[2],
-      );
-    }
+      ));
+    });
 
-    return null;
+    await magicHomeService.startSearch(broadcastAddress);
   }
 
-  Future<bool> connectTo(MagicHome device) async =>
-      magicHomeService.connect(device.internetAddress);
+  void stopSearch() => _datagramSubscription.cancel();
 
-  Future<void> setColor(LedColor color, InternetAddress address) async {
+  Future<bool> connectTo(MagicHome device) async =>
+      magicHomeService.connectWith(device.internetAddress);
+
+  void setColor(MagicHome device, LedColor color) async {
     final message = [
       color.persist ? 0x31 : 0x41,
       color.red,
@@ -42,10 +52,18 @@ class MagicHomeRepository implements LedRepository {
       0x0F,
     ];
 
-    await magicHomeService.send(message, address);
+    await magicHomeService.send(message, device.internetAddress);
+  }
+
+  void togglePower(MagicHome device, {bool turnOn = true}) {
+    magicHomeService.send(
+      turnOn ? _messageOn : _messageOff,
+      device.internetAddress,
+    );
   }
 
   void dispose() {
     magicHomeService.dispose();
+    _datagramSubscription?.cancel();
   }
 }

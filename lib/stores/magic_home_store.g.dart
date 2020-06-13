@@ -39,6 +39,36 @@ mixin _$MagicHomeStore on _MagicHomeStore, Store {
     });
   }
 
+  final _$isOnAtom = Atom(name: '_MagicHomeStore.isOn');
+
+  @override
+  bool get isOn {
+    _$isOnAtom.reportRead();
+    return super.isOn;
+  }
+
+  @override
+  set isOn(bool value) {
+    _$isOnAtom.reportWrite(value, super.isOn, () {
+      super.isOn = value;
+    });
+  }
+
+  final _$currentColorAtom = Atom(name: '_MagicHomeStore.currentColor');
+
+  @override
+  LedColor get currentColor {
+    _$currentColorAtom.reportRead();
+    return super.currentColor;
+  }
+
+  @override
+  set currentColor(LedColor value) {
+    _$currentColorAtom.reportWrite(value, super.currentColor, () {
+      super.currentColor = value;
+    });
+  }
+
   final _$scanAsyncAction = AsyncAction('_MagicHomeStore.scan');
 
   @override
@@ -57,7 +87,9 @@ mixin _$MagicHomeStore on _MagicHomeStore, Store {
   String toString() {
     return '''
 connectedDevice: ${connectedDevice},
-devicesFound: ${devicesFound}
+devicesFound: ${devicesFound},
+isOn: ${isOn},
+currentColor: ${currentColor}
     ''';
   }
 }

@@ -4,13 +4,18 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 class MagicHome extends Equatable {
-  const MagicHome({
+  MagicHome({
     @required this.internetAddress,
-    @required this.mac,
+    @required String rawMac,
     @required this.model,
-  })  : assert(mac != null),
-        assert(internetAddress != null),
-        assert(model != null);
+  })  : assert(internetAddress != null),
+        assert(rawMac != null),
+        assert(model != null),
+        mac = rawMac.splitMapJoin(
+          RegExp(r'..'),
+          onMatch: (m) => '${m.group(0)}'
+              '${m.end == rawMac[1].length ? '' : ':'}',
+        );
 
   final String mac;
   final InternetAddress internetAddress;

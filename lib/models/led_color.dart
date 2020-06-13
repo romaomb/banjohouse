@@ -17,4 +17,6 @@ class LedColor extends Equatable {
 
   @override
   List<Object> get props => [red, green, blue, persist];
+
+  String toString() => '($red, $green, $blue)';
 }

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:mobx/mobx.dart';
@@ -22,6 +24,7 @@ abstract class _MagicHomeStore with Store {
 
   /// TODO: get connected network address
   final _broadcast = InternetAddress('192.168.0.255');
+  final _random = Random();
 
   @observable
   MagicHome connectedDevice;
@@ -29,19 +32,32 @@ abstract class _MagicHomeStore with Store {
   @observable
   ObservableList<MagicHome> devicesFound = ObservableList();
 
+  @observable
+  bool isOn = false;
+
+  @observable
+  LedColor currentColor;
+
+  StreamSubscription _deviceSubscription;
+
   @action
   Future<void> scan() async {
     print('Scanning');
-    final device = await magicHomeRepository.searchDevice(_broadcast);
-    if (device != null && !devicesFound.contains(device)) {
-      print('New device found ${device.toString()}');
-      devicesFound.add(device);
-    }
+
+    _deviceSubscription?.cancel();
+    _deviceSubscription = magicHomeRepository.magicHome.listen((device) {
+      if (!devicesFound.contains(device)) {
+        print('New device found ${device.toString()}');
+        devicesFound.add(device);
+      }
+    });
+
+    await magicHomeRepository.searchForDevices(_broadcast);
   }
 
   @action
   Future<void> connectTo(MagicHome device) async {
-    print('Connecting');
+    await magicHomeRepository.stopSearch();
     final didConnect = await magicHomeRepository.connectTo(device);
     if (didConnect) {
       print('Connected to ${device.toString()}');
@@ -49,17 +65,27 @@ abstract class _MagicHomeStore with Store {
     }
   }
 
+  Future<void> setRandomColor() => setColor(
+        _random.nextInt(255),
+        _random.nextInt(255),
+        _random.nextInt(255),
+      );
+
   Future<void> setColor(int red, int green, int blue) async {
     if (connectedDevice == null) return;
+
     print('Setting new color ($red, $green, $blue)');
+    currentColor = LedColor(red, green, blue);
+
     await magicHomeRepository.setColor(
-      LedColor(
-        red,
-        green,
-        blue,
-      ),
-      connectedDevice.internetAddress,
+      connectedDevice,
+      currentColor,
     );
+  }
+
+  void togglePower() {
+    isOn = !isOn;
+    magicHomeRepository.togglePower(connectedDevice, turnOn: isOn);
   }
 
   void dispose() {
