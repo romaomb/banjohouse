@@ -1,6 +1,8 @@
 include: package:effective_dart/analysis_options.yaml
 
 analyzer:
+  exclude:
+    - lib/**/*.g.dart
   strong-mode:
     implicit-casts: false
     implicit-dynamic: false
@@ -8,5 +10,6 @@ analyzer:
 linter:
   rules:
     public_member_api_docs: false
+    type_annotate_public_apis: false
     prefer_const_constructors: true
     prefer_const_literals_to_create_immutables: true

@@ -13,6 +13,10 @@ git config core.hooksPath .githooks/
 
 ## Roadmap
 
-[] Integration with [Magic Home](https://github.com/xoseperez/espurna/wiki/Hardware-Magic-Home-LED-Controller)
-[] Add Magic Home to a custom WiFi
-[] More to come!
+- [ ] Integration with [Magic Home](https://github.com/xoseperez/espurna/wiki/Hardware-Magic-Home-LED-Controller)
+- [ ] Add Magic Home to a custom WiFi
+- [ ] More to come!
+
+## Acknowledgments
+
+ Thanks to @Danielhiversen for [flux_led](https://github.com/Danielhiversen/flux_led)
