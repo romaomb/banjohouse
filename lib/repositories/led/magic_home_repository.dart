@@ -17,9 +17,10 @@ class MagicHomeRepository implements LedRepository {
 
     if (data != null) {
       final rawMagicHome = data.split(',');
+      print('RawData: $rawMagicHome');
       return MagicHome(
         internetAddress: InternetAddress(rawMagicHome[0]),
-        id: rawMagicHome[1],
+        mac: rawMagicHome[1],
         model: rawMagicHome[2],
       );
     }
@@ -27,7 +28,10 @@ class MagicHomeRepository implements LedRepository {
     return null;
   }
 
-  Future<void> sendColor(LedColor color, InternetAddress address) async {
+  Future<bool> connectTo(MagicHome device) async =>
+      magicHomeService.connect(device.internetAddress);
+
+  Future<void> setColor(LedColor color, InternetAddress address) async {
     final message = [
       color.persist ? 0x31 : 0x41,
       color.red,

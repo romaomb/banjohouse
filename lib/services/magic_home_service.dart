@@ -25,7 +25,7 @@ class MagicHomeService {
     String data;
     await udpSocket.firstWhere((_) {
       final datagram = udpSocket.receive();
-      data = _asciiCodec.decode(datagram.data);
+      data = _asciiCodec.decode(datagram?.data);
       return datagram != null && data != null && data != _discoveryMessage;
     });
 
@@ -33,26 +33,26 @@ class MagicHomeService {
     return data;
   }
 
+  Future<bool> connect(InternetAddress address) async {
+    if (_tcpSocket != null) {
+      if (_tcpSocket.address.address != address.address) {
+        await _tcpSocket.close();
+      } else {
+        return true;
+      }
+    }
+
+    _tcpSocket = await Socket.connect(address, _devicePort);
+    return true;
+  }
+
   Future<void> send(List<int> message, InternetAddress address) async {
-    await _connect(address);
     final checkSum =
         message.reduce((value, element) => value + element) & _bitwise;
     _tcpSocket.add(Uint8List.fromList([
       ...message,
       checkSum,
     ]));
-  }
-
-  Future<void> _connect(InternetAddress address) async {
-    if (_tcpSocket != null) {
-      if (_tcpSocket.address.address != address.address) {
-        await _tcpSocket.close();
-      } else {
-        return;
-      }
-    }
-
-    _tcpSocket = await Socket.connect(address, _devicePort);
   }
 
   void dispose() {

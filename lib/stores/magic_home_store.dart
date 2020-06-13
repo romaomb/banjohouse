@@ -24,19 +24,42 @@ abstract class _MagicHomeStore with Store {
   final _broadcast = InternetAddress('192.168.0.255');
 
   @observable
-  MagicHome device;
+  MagicHome connectedDevice;
+
+  @observable
+  ObservableList<MagicHome> devicesFound = ObservableList();
 
   @action
-  Future<void> connect() async {
+  Future<void> scan() async {
+    print('Scanning');
+    final device = await magicHomeRepository.searchDevice(_broadcast);
+    if (device != null && !devicesFound.contains(device)) {
+      print('New device found ${device.toString()}');
+      devicesFound.add(device);
+    }
+  }
+
+  @action
+  Future<void> connectTo(MagicHome device) async {
     print('Connecting');
-    device = await magicHomeRepository.searchDevice(_broadcast);
-    print('New device $device');
+    final didConnect = await magicHomeRepository.connectTo(device);
+    if (didConnect) {
+      print('Connected to ${device.toString()}');
+      connectedDevice = device;
+    }
   }
 
   Future<void> setColor(int red, int green, int blue) async {
-    if (device == null) return;
-    await magicHomeRepository.sendColor(
-        LedColor(red, green, blue), device.internetAddress);
+    if (connectedDevice == null) return;
+    print('Setting new color ($red, $green, $blue)');
+    await magicHomeRepository.setColor(
+      LedColor(
+        red,
+        green,
+        blue,
+      ),
+      connectedDevice.internetAddress,
+    );
   }
 
   void dispose() {

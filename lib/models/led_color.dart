@@ -1,4 +1,6 @@
-class LedColor {
+import 'package:equatable/equatable.dart';
+
+class LedColor extends Equatable {
   const LedColor(
     this.red,
     this.green,
@@ -12,4 +14,7 @@ class LedColor {
   final int red;
   final int green;
   final int blue;
+
+  @override
+  List<Object> get props => [red, green, blue, persist];
 }
