@@ -39,11 +39,11 @@ abstract class _MagicHomeStore with Store {
   LedColor currentColor;
 
   StreamSubscription _deviceSubscription;
+  StreamSubscription _magicHomeInfoSubscription;
 
   void scan() async {
     _deviceSubscription?.cancel();
     _deviceSubscription = magicHomeRepository.magicHome.listen(_onDeviceFound);
-
     await magicHomeRepository.searchForDevices(_broadcast);
   }
 
@@ -60,7 +60,18 @@ abstract class _MagicHomeStore with Store {
     final didConnect = await magicHomeRepository.connectTo(device);
     if (didConnect) {
       connectedDevice = device;
+      _listenForInfo();
     }
+  }
+
+  @action
+  void _listenForInfo() {
+    _magicHomeInfoSubscription = magicHomeRepository.magicHomeInfo.listen(
+      (info) {
+        isOn = info.isOn;
+        currentColor = info.color;
+      },
+    );
   }
 
   void setRandomColor() => setRgbColor(
@@ -72,21 +83,26 @@ abstract class _MagicHomeStore with Store {
   @action
   void setRgbColor(int red, int green, int blue) {
     if (connectedDevice == null) return;
-
     currentColor = LedColor(red, green, blue);
-
     magicHomeRepository.setColor(
       connectedDevice,
       currentColor,
     );
   }
 
+  @action
   void togglePower() {
     isOn = !isOn;
     magicHomeRepository.togglePower(connectedDevice, turnOn: isOn);
   }
 
+  @action
+  void getInfo(MagicHome device) =>
+      magicHomeRepository.getInfo(connectedDevice);
+
   void dispose() {
     magicHomeRepository.dispose();
+    _magicHomeInfoSubscription?.cancel();
+    _deviceSubscription?.cancel();
   }
 }
