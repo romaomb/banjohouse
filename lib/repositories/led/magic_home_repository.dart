@@ -13,10 +13,6 @@ class MagicHomeRepository implements LedRepository {
 
   MagicHomeRepository(this.magicHomeService);
 
-  static const _messageOn = [0x71, 0x23, 0x0f];
-  static const _messageOff = [0x71, 0x24, 0x0f];
-  static const _messageInfo = [0x81, 0x8a, 0x8b];
-
   final _magicHome = StreamController<MagicHome>();
   StreamSink get _magicHomeSink => _magicHome.sink;
   Stream<MagicHome> get magicHome => _magicHome.stream.asBroadcastStream();
@@ -51,21 +47,25 @@ class MagicHomeRepository implements LedRepository {
   Future<bool> connectTo(MagicHome device) async {
     await magicHomeService.connectWith(device.internetAddress);
     _tcpSubscription = magicHomeService.tcpStream.listen(_onTcpMessageReceived);
-    magicHomeService.send(_messageInfo, device.internetAddress);
+    magicHomeService.send(messageInfo, device.internetAddress);
     return true;
   }
 
   void _onTcpMessageReceived(Uint8List message) {
-    if (message != null) {
-      _magicHomeInfoSink.add(MagicHomeInfo(
+    if (message != null && message.length == messageInfoLength) {
+      print(message);
+      _magicHomeInfoSink.add(
+        MagicHomeInfo(
           color: LedColor(message[6], message[7], message[8]),
-          isOn: message[2] == 0x24));
+          isOn: message[2] == on,
+        ),
+      );
     }
   }
 
   void setColor(MagicHome device, LedColor color) {
     final message = [
-      color.persist ? 0x31 : 0x41,
+      color.persist ? persist : temporary,
       color.red,
       color.green,
       color.blue,
@@ -79,13 +79,13 @@ class MagicHomeRepository implements LedRepository {
 
   void togglePower(MagicHome device, {bool turnOn = true}) {
     magicHomeService.send(
-      turnOn ? _messageOn : _messageOff,
+      turnOn ? messageOn : messageOff,
       device.internetAddress,
     );
   }
 
   void getInfo(MagicHome device) =>
-      magicHomeService.send(_messageInfo, device.internetAddress);
+      magicHomeService.send(messageInfo, device.internetAddress);
 
   void dispose() {
     magicHomeService.dispose();
