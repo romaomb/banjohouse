@@ -11,6 +11,7 @@ class MagicHomeService {
   static const _bitwise = 0xFF;
 
   Socket _tcpSocket;
+  Stream<Uint8List> get tcpStream => _tcpSocket.asBroadcastStream();
 
   RawDatagramSocket _udpSocket;
   Stream<RawSocketEvent> get _udpStream => _udpSocket.asBroadcastStream();
